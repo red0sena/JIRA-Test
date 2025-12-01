@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feature/**
+      - dev
 
 permissions:
   deployments: write
@@ -14,19 +14,20 @@ jobs:
   jira-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Jira 연동을 위한 Deployment 생성
       - name: Create Jira Deployment
         id: deployment
         uses: chrnorm/deployment-action@releases/v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          environment: production
+          environment: ${{ env.ENVIRONMENT }}
 
-      # 상태 업데이트 (success/failure)
       - name: Mark deployment success
         uses: chrnorm/deployment-status@releases/v1
         with:
