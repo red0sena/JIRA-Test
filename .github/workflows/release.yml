@@ -15,6 +15,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         jira-token: ${{ secrets.JIRA_TOKEN }}
         jira-domain: 'https://kookmin-team-rks9sihu.atlassian.net/'
+        jira-version-prefix: 'Customer'
     - name: Print jira issue keys
       run: |
         echo ${{ steps.add_jira_issue_version.outputs.jira_issue_keys }}
