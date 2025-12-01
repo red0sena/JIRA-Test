@@ -1,0 +1,35 @@
+name: Jira Deployment Link
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+
+permissions:
+  deployments: write
+  contents: read
+
+jobs:
+  jira-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Jira 연동을 위한 Deployment 생성
+      - name: Create Jira Deployment
+        id: deployment
+        uses: chrnorm/deployment-action@releases/v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: production
+
+      # 상태 업데이트 (success/failure)
+      - name: Mark deployment success
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          state: success
