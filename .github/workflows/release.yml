@@ -1,0 +1,20 @@
+name: Jira issue version by release PR
+on:
+  pull_request:
+    types: [ opened, synchronize, ready_for_review ]
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Jira issue version by release PR
+      id: add_jira_issue_version
+      uses: PRNDcompany/jira-issue-version-by-release-pr@0.6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        jira-token: ${{ secrets.JIRA_TOKEN }}
+        jira-domain: 'https://kookmin-team-rks9sihu.atlassian.net/'
+    - name: Print jira issue keys
+      run: |
+        echo ${{ steps.add_jira_issue_version.outputs.jira_issue_keys }}
