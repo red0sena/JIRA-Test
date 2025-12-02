@@ -15,21 +15,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
 
-      # Jira 연동을 위한 Deployment 생성
+      # Extract JIRA Ticket Keys from commit messages
+      - name: Detect Jira Issue Keys
+        id: jira_keys
+        run: |
+          JIRA_KEYS=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+')
+          echo "Detected Jira Keys: $JIRA_KEYS"
+          echo "jira_keys=$JIRA_KEYS" >> $GITHUB_OUTPUT
+
+      # Jira Deployment create
       - name: Create Jira Deployment
         id: deployment
         uses: chrnorm/deployment-action@releases/v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          environment: production
+          environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+          initial_status: pending
 
-      # 상태 업데이트 (success/failure)
-      - name: Mark deployment success
+      # Deployment status update
+      - name: Mark Deployment Status
+        if: always()
         uses: chrnorm/deployment-status@releases/v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           deployment_id: ${{ steps.deployment.outputs.deployment_id }}
-          state: success
+          state: ${{ job.status }}
+
+      # Print detected Jira keys (confirm output)
+      - name: Print Detected JIRA Ticket(s)
+        run: echo "Jira Ticket(s): ${{ steps.jira_keys.outputs.jira_keys }}"
