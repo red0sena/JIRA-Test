@@ -21,24 +21,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.ref }}
 
-      # Extract JIRA Ticket Keys from commit messages
-      - name: Detect Jira Issue Keys
-        id: jira_keys
-        run: |
-          JIRA_KEYS=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+')
-          echo "Detected Jira Keys: $JIRA_KEYS"
-          echo "jira_keys=$JIRA_KEYS" >> $GITHUB_OUTPUT
-
-      # Print results of detected JIRA Keys
-      - name: Print Detected JIRA Ticket(s)
-        run: |
-          if [ -z "${{ steps.jira_keys.outputs.jira_keys }}" ]; then
-            echo "No Jira Ticket detected";
-          else
-            echo "Jira Ticket(s): ${{ steps.jira_keys.outputs.jira_keys }}";
-          fi
-
-      # Create Jira Deployment
+      # Jira 연동을 위한 Deployment 생성
       - name: Create Jira Deployment
         id: deployment
         uses: chrnorm/deployment-action@releases/v1
@@ -47,11 +30,11 @@ jobs:
           environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
           initial_status: pending
 
-      # Deployment Status Update
+      # 배포 상태 업데이트
       - name: Mark Deployment Status
-        if: always()
+        if: always()   # 실패해도 이 step은 실행되게 함
         uses: chrnorm/deployment-status@releases/v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           deployment_id: ${{ steps.deployment.outputs.deployment_id }}
-          state: ${{ job.status }}
+          state: ${{ job.status }}    # success / failure 자동 변환
